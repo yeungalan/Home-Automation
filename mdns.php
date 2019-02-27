@@ -7,7 +7,6 @@ for($i=0;$i<=10;$i++){
 	$info = [];
 	$data = $x->read();
 	print_r($x->prase($data));
-	//print_r($data);
 	sleep(1);
 }
 
@@ -205,9 +204,10 @@ class mDNS{
 				array_push($TXTArr,array("value" => $tmp,"length" => $currentTXTLength));
 				$currentStrPosition = $currentStrPosition + $currentTXTLength + 1;
 			}
+			$currentStrPosition = $BeforeIterationStrPosition;
 			$info["Record"]["TXT"] = $TXTArr;
 		}else if($info["Type"] == 33){
-			$info["Record"]["SRV"]["StartLength"] = $currentStrPosition;
+			
 			
 			$info["Record"]["SRV"]["Priority"] = hexdec(dechex($data[$currentStrPosition]).dechex($data[$currentStrPosition + 1]));
 			$currentStrPosition = $currentStrPosition + 2;
@@ -229,7 +229,8 @@ class mDNS{
 			$currentStrPosition = $currentStrPosition - 6;
 		}else if($info["Type"] == 1){
 			$info["Record"]["A"]["IP"] = $data[$currentStrPosition].".".$data[$currentStrPosition + 1].".".$data[$currentStrPosition + 2].".".$data[$currentStrPosition + 3];
-			$currentStrPosition = $currentStrPosition + $info["DataLength"];
+		}else if($info["Type"] == 28){
+			$info["Record"]["AAAA"]["IP"] = $data[$currentStrPosition].$data[$currentStrPosition + 1]."::".$data[$currentStrPosition + 2].$data[$currentStrPosition + 3]."::".$data[$currentStrPosition + 4].$data[$currentStrPosition + 5]."::".$data[$currentStrPosition + 6].$data[$currentStrPosition + 7];
 		}else if($info["Type"] == 12){
 			for($i = $currentStrPosition + 1;$i < $currentStrPosition + $info["DataLength"] - 1;$i++){
 				if($data[$i]== 5 || $data[$i] == 4){
@@ -238,8 +239,6 @@ class mDNS{
 					$info["DomainName"] = $info["DomainName"].chr($data[$i]);
 				}
 			}
-		}else{
-			$currentStrPosition = $currentStrPosition + $info["DataLength"];
 		}
 		
 		$currentStrPosition = $currentStrPosition + $info["DataLength"];
