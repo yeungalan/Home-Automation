@@ -122,10 +122,10 @@ class mDNS{
 				}
 			}
 			$info["Record"]["SRV"]["Target"] = $info["Record"]["SRV"]["Target"].".local";
-			$currentStrPosition = $currentStrPosition + $info["DataLength"];
+			$currentStrPosition = $currentStrPosition + $info["DataLength"] - 6;
 		}else if($info["Type"] == 1){
 			$info["Record"]["A"]["IP"] = $data[$currentStrPosition].".".$data[$currentStrPosition + 1].".".$data[$currentStrPosition + 2].".".$data[$currentStrPosition + 3];
-			$currentStrPosition = $currentStrPosition + $info["DataLength"] - 9;
+			$currentStrPosition = $currentStrPosition + $info["DataLength"];
 		}
 		$info["NextFunctionReadFrom"] = $currentStrPosition;
 		return $info;
