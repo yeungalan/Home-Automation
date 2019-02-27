@@ -97,7 +97,9 @@ class mDNS{
 				$currentTXTLength = $data[$currentStrPosition];
 				$tmp = "";
 				for($i = $currentStrPosition + 1;$i <= $currentStrPosition + $currentTXTLength;$i++){
-					$tmp = $tmp.chr($data[$i]);
+					if($data[$i] > 31 && $data[$i] < 127){
+						$tmp = $tmp.chr($data[$i]);
+					}
 				}
 				array_push($TXTArr,array("value" => $tmp,"length" => $currentTXTLength));
 				$currentStrPosition = $currentStrPosition + $currentTXTLength + 1;
@@ -171,7 +173,7 @@ class mDNS{
 		for($i = $pos;$i < $currentStrPosition;$i++){
 			if($data[$i]== 5 || $data[$i] == 4){
 				$info["Name"] = $info["Name"].".";
-			}else{
+			}else if($data[$i] > 31 && $data[$i] < 127){
 				$info["Name"] = $info["Name"].chr($data[$i]);
 			}
 		}
@@ -199,7 +201,9 @@ class mDNS{
 				$currentTXTLength = $data[$currentStrPosition];
 				$tmp = "";
 				for($i = $currentStrPosition + 1;$i <= $currentStrPosition + $currentTXTLength;$i++){
-					$tmp = $tmp.chr($data[$i]);
+					if($data[$i] > 31 && $data[$i] < 127){
+						$tmp = $tmp.chr($data[$i]);
+					}
 				}
 				array_push($TXTArr,array("value" => $tmp,"length" => $currentTXTLength));
 				$currentStrPosition = $currentStrPosition + $currentTXTLength + 1;
@@ -230,7 +234,7 @@ class mDNS{
 		}else if($info["Type"] == 1){
 			$info["Record"]["A"]["IP"] = $data[$currentStrPosition].".".$data[$currentStrPosition + 1].".".$data[$currentStrPosition + 2].".".$data[$currentStrPosition + 3];
 		}else if($info["Type"] == 28){
-			$info["Record"]["AAAA"]["IP"] = $data[$currentStrPosition].$data[$currentStrPosition + 1]."::".$data[$currentStrPosition + 2].$data[$currentStrPosition + 3]."::".$data[$currentStrPosition + 4].$data[$currentStrPosition + 5]."::".$data[$currentStrPosition + 6].$data[$currentStrPosition + 7];
+			$info["Record"]["AAAA"]["IP"] = dechex($data[$currentStrPosition]).dechex($data[$currentStrPosition + 1]).":".dechex($data[$currentStrPosition + 2]).dechex($data[$currentStrPosition + 3]).":".dechex($data[$currentStrPosition + 4]).dechex($data[$currentStrPosition + 5]).":".dechex($data[$currentStrPosition + 6]).dechex($data[$currentStrPosition + 7]).":".dechex($data[$currentStrPosition + 8]).dechex($data[$currentStrPosition + 9]).":".dechex($data[$currentStrPosition + 10]).dechex($data[$currentStrPosition + 11]).":".dechex($data[$currentStrPosition + 12]).dechex($data[$currentStrPosition + 13]).":".dechex($data[$currentStrPosition + 14]).dechex($data[$currentStrPosition + 15]);
 		}else if($info["Type"] == 12){
 			for($i = $currentStrPosition + 1;$i < $currentStrPosition + $info["DataLength"] - 1;$i++){
 				if($data[$i]== 5 || $data[$i] == 4){
