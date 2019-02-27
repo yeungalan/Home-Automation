@@ -126,6 +126,16 @@ class mDNS{
 		}else if($info["Type"] == 1){
 			$info["Record"]["A"]["IP"] = $data[$currentStrPosition].".".$data[$currentStrPosition + 1].".".$data[$currentStrPosition + 2].".".$data[$currentStrPosition + 3];
 			$currentStrPosition = $currentStrPosition + $info["DataLength"];
+		}else if($info["Type"] == 12){
+			for($i = $currentStrPosition + 1;$i < $currentStrPosition + $info["DataLength"] - 1;$i++){
+			if($data[$i]== 5 || $data[$i] == 4){
+				$info["DomainName"] = $info["DomainName"].".";
+			}else if($data[$i] > 31 && $data[$i] < 127){
+				$info["DomainName"] = $info["DomainName"].chr($data[$i]);
+			}
+		}
+		}else{
+			$currentStrPosition = $currentStrPosition + $info["DataLength"];
 		}
 		$info["NextFunctionReadFrom"] = $currentStrPosition;
 		return $info;
@@ -180,12 +190,56 @@ class mDNS{
 		$info["DataLength"] = hexdec(dechex($data[$currentStrPosition]).dechex($data[$currentStrPosition + 1]));
 		$currentStrPosition = $currentStrPosition + 2;
 		
-		for($i = $currentStrPosition + 1;$i < $currentStrPosition + $info["DataLength"] - 1;$i++){
-			if($data[$i]== 5 || $data[$i] == 4){
-				$info["DomainName"] = $info["DomainName"].".";
-			}else if($data[$i] > 31 && $data[$i] < 127){
-				$info["DomainName"] = $info["DomainName"].chr($data[$i]);
+		// 16 = TXT
+		// 33 = SRV
+		// 01 = A
+		if($info["Type"] == 16){
+			$TXTArr = [];
+			$BeforeIterationStrPosition = $currentStrPosition;
+			while($currentStrPosition < $BeforeIterationStrPosition + $info["DataLength"]){
+				$currentTXTLength = $data[$currentStrPosition];
+				$tmp = "";
+				for($i = $currentStrPosition + 1;$i <= $currentStrPosition + $currentTXTLength;$i++){
+					$tmp = $tmp.chr($data[$i]);
+				}
+				array_push($TXTArr,array("value" => $tmp,"length" => $currentTXTLength));
+				$currentStrPosition = $currentStrPosition + $currentTXTLength + 1;
 			}
+			$info["Record"]["TXT"] = $TXTArr;
+		}else if($info["Type"] == 33){
+			$info["Record"]["SRV"]["StartLength"] = $currentStrPosition;
+			
+			$info["Record"]["SRV"]["Priority"] = hexdec(dechex($data[$currentStrPosition]).dechex($data[$currentStrPosition + 1]));
+			$currentStrPosition = $currentStrPosition + 2;
+			
+			$info["Record"]["SRV"]["Weight"] = hexdec(dechex($data[$currentStrPosition]).dechex($data[$currentStrPosition + 1]));
+			$currentStrPosition = $currentStrPosition + 2;
+			
+			$info["Record"]["SRV"]["Port"] = hexdec(dechex($data[$currentStrPosition]).dechex($data[$currentStrPosition + 1]));
+			$currentStrPosition = $currentStrPosition + 2;
+			
+			$info["Record"]["SRV"]["Middle"] = $currentStrPosition;
+			for($i = $currentStrPosition + 1;$i <= $currentStrPosition + $info["DataLength"] - 8;$i++){
+				if($data[$i]== 5 || $data[$i] == 4){
+					$info["Record"]["SRV"]["Target"] = $info["Record"]["SRV"]["Target"].".";
+				}else{
+					$info["Record"]["SRV"]["Target"] = $info["Record"]["SRV"]["Target"].chr($data[$i]);
+				}
+			}
+			$currentStrPosition = $currentStrPosition - 6;
+		}else if($info["Type"] == 1){
+			$info["Record"]["A"]["IP"] = $data[$currentStrPosition].".".$data[$currentStrPosition + 1].".".$data[$currentStrPosition + 2].".".$data[$currentStrPosition + 3];
+			$currentStrPosition = $currentStrPosition + $info["DataLength"];
+		}else if($info["Type"] == 12){
+			for($i = $currentStrPosition + 1;$i < $currentStrPosition + $info["DataLength"] - 1;$i++){
+				if($data[$i]== 5 || $data[$i] == 4){
+					$info["DomainName"] = $info["DomainName"].".";
+				}else if($data[$i] > 31 && $data[$i] < 127){
+					$info["DomainName"] = $info["DomainName"].chr($data[$i]);
+				}
+			}
+		}else{
+			$currentStrPosition = $currentStrPosition + $info["DataLength"];
 		}
 		
 		$currentStrPosition = $currentStrPosition + $info["DataLength"];
@@ -255,7 +309,6 @@ class mDNS{
         $bytes = [];
         for ($x = 0; $x < strlen($response); $x++) {
             array_push($bytes, ord(substr($response, $x, 1)));
-			echo substr($response, $x, 1);
         }
 
         return $bytes;
